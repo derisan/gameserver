@@ -4,16 +4,17 @@ using namespace std;
 #pragma comment (lib, "WS2_32.LIB")
 const char* SERVER_ADDR = "127.0.0.1";
 const short SERVER_PORT = 4000;
-const int BUFSIZE = 256;
+const int BUF_SIZE = 256;
 
-char recv_buf[BUFSIZE];
-char send_buf[BUFSIZE];
+char recv_buf[BUF_SIZE];
+char send_buf[BUF_SIZE];
 SOCKET s_socket;
 WSABUF r_wsabuf;
 WSABUF s_wsabuf;
 DWORD recv_flag = 0;
 
 void do_recv(SOCKET s_socket);
+void do_send();
 
 void error_display(const char* msg, int err_no)
 {
@@ -40,12 +41,13 @@ void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED over, DW
 	delete over;
 
 	do_recv(s_socket);
+	do_send();
 }
 
 void do_recv(SOCKET s_socket)
 {
 	r_wsabuf.buf = recv_buf;
-	r_wsabuf.len = BUFSIZE;
+	r_wsabuf.len = BUF_SIZE;
 
 	recv_flag = 0;
 
@@ -65,6 +67,20 @@ void do_recv(SOCKET s_socket)
 	}
 }
 
+void do_send()
+{
+	cout << "Enter Message : ";
+	cin.getline(send_buf, BUF_SIZE);
+
+	s_wsabuf.buf = send_buf;
+	s_wsabuf.len = static_cast<ULONG>(strlen(send_buf)) + 1;
+
+	WSAOVERLAPPED* s_over = new WSAOVERLAPPED;
+	ZeroMemory(s_over, sizeof(WSAOVERLAPPED));
+
+	WSASend(s_socket, &s_wsabuf, 1, 0, 0, s_over, send_callback);
+}
+
 int main()
 {
 	wcout.imbue(locale("korean"));
@@ -79,20 +95,11 @@ int main()
 	connect(s_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr));
 
 	do_recv(s_socket);
+	do_send();
 
-	for (;;) {
-		cout << "Enter Message : "; 
-		cin.getline(send_buf, BUFSIZE);
-
-		s_wsabuf.buf = send_buf;
-		s_wsabuf.len = static_cast<ULONG>(strlen(send_buf)) + 1;
-
-		WSAOVERLAPPED* s_over = new WSAOVERLAPPED;
-		ZeroMemory(s_over, sizeof(WSAOVERLAPPED));
-
-		WSASend(s_socket, &s_wsabuf, 1, 0, 0, s_over, send_callback);
-
-		SleepEx(100, true);
+	while(true)
+	{
+		SleepEx(10, true);
 	}
 
 	closesocket(s_socket);
