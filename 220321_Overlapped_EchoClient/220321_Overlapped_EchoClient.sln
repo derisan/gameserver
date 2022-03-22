@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.32228.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "220321_Overlapped_EchoClient", "220321_Overlapped_EchoClient\220321_Overlapped_EchoClient.vcxproj", "{A4959D6F-6FA6-4F27-A0D4-E6453BE02B52}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "220322_Overlapped_EchoServer", "220322_Overlapped_EchoServer\220322_Overlapped_EchoServer.vcxproj", "{BF4570B6-1F24-4441-AE41-08F494C4396C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +17,10 @@ Global
 		{A4959D6F-6FA6-4F27-A0D4-E6453BE02B52}.Debug|x64.Build.0 = Debug|x64
 		{A4959D6F-6FA6-4F27-A0D4-E6453BE02B52}.Release|x64.ActiveCfg = Release|x64
 		{A4959D6F-6FA6-4F27-A0D4-E6453BE02B52}.Release|x64.Build.0 = Release|x64
+		{BF4570B6-1F24-4441-AE41-08F494C4396C}.Debug|x64.ActiveCfg = Debug|x64
+		{BF4570B6-1F24-4441-AE41-08F494C4396C}.Debug|x64.Build.0 = Debug|x64
+		{BF4570B6-1F24-4441-AE41-08F494C4396C}.Release|x64.ActiveCfg = Release|x64
+		{BF4570B6-1F24-4441-AE41-08F494C4396C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
