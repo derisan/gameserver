@@ -13,8 +13,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{a4959d6f-6fa6-4f27-a0d4-e6453be02b52}</ProjectGuid>
-    <RootNamespace>My220321OverlappedEchoClient</RootNamespace>
+    <ProjectGuid>{bf4570b6-1f24-4441-ae41-08f494c4396c}</ProjectGuid>
+    <RootNamespace>My220322OverlappedEchoServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

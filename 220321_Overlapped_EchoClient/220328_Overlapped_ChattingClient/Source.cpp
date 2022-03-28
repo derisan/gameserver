@@ -37,7 +37,23 @@ void CALLBACK send_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED over, DW
 
 void CALLBACK recv_callback(DWORD err, DWORD num_bytes, LPWSAOVERLAPPED over, DWORD flags)
 {
-	cout << "Server Sent [" << num_bytes << "bytes] : " << recv_buf << endl;
+	char* m_start = recv_buf;
+
+	while(true) {
+		int message_size = m_start[0];
+		int from_client = m_start[1];
+		cout << "Client[" << from_client << "] Sent [" << message_size << "bytes] : " << m_start + 2 << endl;
+		
+		num_bytes -= message_size;
+
+		if (0 >= num_bytes)
+		{
+			break;
+		}
+
+		m_start += message_size;
+	}
+
 	delete over;
 
 	do_recv(s_socket);
@@ -97,7 +113,7 @@ int main()
 	do_recv(s_socket);
 	do_send();
 
-	while(true)
+	while (true)
 	{
 		SleepEx(10, true);
 	}
