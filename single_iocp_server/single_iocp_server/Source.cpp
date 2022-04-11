@@ -8,8 +8,6 @@
 #pragma comment(lib, "MSWSock.lib")
 using namespace std;
 
-constexpr int MAX_USER = 10;
-
 enum COMP_TYPE
 {
 	OP_ACCEPT,
@@ -93,19 +91,21 @@ public:
 		do_send(&p);
 	}
 
-	void send_move_packet()
-	{
-		SC_MOVE_PLAYER_PACKET p;
-		p.size = sizeof(SC_MOVE_PLAYER_PACKET);
-		p.type = SC_MOVE_PLAYER;
-		p.id = _id;
-		p.x = x;
-		p.y = y;
-		do_send(&p);
-	}
+	void send_move_packet(int c_id);
 };
 
 array<SESSION, MAX_USER> clients;
+
+void SESSION::send_move_packet(int c_id)
+{
+	SC_MOVE_PLAYER_PACKET p;
+	p.size = sizeof(SC_MOVE_PLAYER_PACKET);
+	p.type = SC_MOVE_PLAYER;
+	p.id = c_id;
+	p.x = clients[c_id].x;
+	p.y = clients[c_id].y;
+	do_send(&p);
+}
 
 int get_new_client_id()
 {
@@ -129,6 +129,38 @@ void processPacket(int c_id, char* packet)
 		CS_LOGIN_PACKET* p = reinterpret_cast<CS_LOGIN_PACKET*>(packet);
 		strcpy_s(clients[c_id]._name, p->name);
 		clients[c_id].send_login_info_packet();
+
+		for (auto& pl : clients)
+		{
+			if (!pl.in_use) continue;
+			if (pl._id == c_id) continue;
+
+			SC_ADD_PLAYER_PACKET add_p;
+			add_p.size = sizeof(SC_ADD_PLAYER_PACKET);
+			add_p.id = c_id;
+			strcpy_s(add_p.name, p->name);
+			add_p.type = SC_ADD_PLAYER;
+			add_p.x = clients[c_id].x;
+			add_p.y = clients[c_id].y;
+
+			pl.do_send(&add_p);
+		}
+
+		for (auto& pl : clients)
+		{
+			if (!pl.in_use) continue;
+			if (pl._id != c_id) continue;
+
+			SC_ADD_PLAYER_PACKET add_p;
+			add_p.size = sizeof(SC_ADD_PLAYER_PACKET);
+			add_p.id = pl._id;
+			strcpy_s(add_p.name, pl._name);
+			add_p.type = SC_ADD_PLAYER;
+			add_p.x = pl.x;
+			add_p.y = pl.y;
+
+			clients[c_id].do_send(&add_p);
+		}
 		break;
 	}
 	case CS_MOVE:
@@ -138,7 +170,7 @@ void processPacket(int c_id, char* packet)
 		short& y = clients[c_id].y;
 		switch (p->direction)
 		{
-		case 0: // UP
+		case 0: // UP	
 			if (y > 0) 
 				y--;
 			break;
@@ -155,12 +187,35 @@ void processPacket(int c_id, char* packet)
 				x++;
 			break;
 		}
-		clients[c_id].send_move_packet();
+
+		for (auto& pl : clients){
+			if(pl.in_use)
+				pl.send_move_packet(c_id);
+		}
 		break;
 	}
 	default:
 		break;
 	}
+}
+
+void disconnect(int c_id)
+{
+	for (auto& pl : clients)
+	{
+		if (pl.in_use == false) continue;
+		if (pl._id == c_id) continue;
+
+		SC_REMOVE_PLAYER_PACKET p;
+		p.size = sizeof(SC_REMOVE_PLAYER_PACKET);
+		p.type = SC_REMOVE_PLAYER;
+		p.id = c_id;
+
+		pl.do_send(&p);
+	}
+
+	closesocket(clients[c_id]._socket);
+	clients[c_id].in_use = false;
 }
 
 int main()
@@ -194,9 +249,21 @@ int main()
 		ULONG_PTR key;
 		WSAOVERLAPPED* over = nullptr;
 
-		::GetQueuedCompletionStatus(h_iocp, &num_bytes, &key, &over, INFINITE);
+		BOOL ret = ::GetQueuedCompletionStatus(h_iocp, &num_bytes, &key, &over, INFINITE);
 
 		OVER_EXP* ex_over = reinterpret_cast<OVER_EXP*>(over);
+
+		if (!ret)
+		{
+			if ((ex_over->_comp_type == OP_ACCEPT)) cout << "accept error\n";
+			else
+			{
+				cout << "GQCS Error on client[" << key << "]\n";
+				disconnect(key);
+				if (ex_over->_comp_type == OP_SEND) delete ex_over;
+				continue;;
+			}
+		}
 
 		switch (ex_over->_comp_type)
 		{
